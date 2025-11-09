@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>교육 안내 페이지 생성기</title>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+<style>
+  :root {
+    --bg: #f7f7fb;
+    --card: #ffffff;
+    --text: #1f2937;
+    --muted: #6b7280;
+    --border: #e5e7eb;
+    --primary: #2563EB; /* default: blue */
+    --accent: rgba(37, 99, 235, .08);
+  }
+  [data-theme="yellow"] { --primary:#FFD43B; --accent: rgba(255,212,59,.15); }
+  [data-theme="green"] { --primary:#10B981; --accent: rgba(16,185,129,.12); }
+  [data-theme="blue"]  { --primary:#2563EB; --accent: rgba(37,99,235,.10); }
+  [data-theme="orange"]{ --primary:#F97316; --accent: rgba(249,115,22,.12); }
+
+  *{box-sizing:border-box}
+  html, body { height:100%; }
+  body { margin:0; background:var(--bg); color:var(--text); font-family:Pretendard, system-ui, -apple-system, "Apple SD Gothic Neo", "Noto Sans KR", Arial, sans-serif; }
+  .appbar { position:sticky; top:0; z-index:50; display:flex; align-items:center; gap:12px; padding:12px 16px; background:var(--card); border-bottom:1px solid var(--border); }
+  .appbar h1 { margin:0; font-size:16px; letter-spacing:-.2px }
+  .theme-picker button { border:1px solid var(--border); background:#fff; border-radius:999px; padding:8px 12px; margin-right:8px; font-weight:600; cursor:pointer }
+  .theme-picker button.active { background:var(--primary); color:#fff; border-color:transparent; }
+
+  .layout { display:flex; gap:16px; padding:16px; max-width:1200px; margin:0 auto; }
+  @media (max-width: 980px){ .layout{ flex-direction:column; } }
+
+  .panel { background:var(--card); border:1px solid var(--border); border-radius:16px; padding:16px; }
+  .left { flex:0 0 480px; max-width:100%; }
+  .right { flex:1; }
+
+  .section { border:1px dashed var(--border); border-radius:12px; padding:12px; margin-bottom:12px; background:#fff; }
+  .section h3 { margin:0 0 10px; font-size:15px; }
+  .row { display:flex; gap:8px; margin:8px 0; align-items:center; }
+  .row label { width:120px; font-size:13px; color:var(--muted); }
+  .row input[type="text"], .row input[type="url"], .row textarea, .row select { flex:1; padding:10px; border:1px solid var(--border); border-radius:10px; font-size:14px; }
+  .row input[type="checkbox"] { transform: scale(1.2); }
+  .help { font-size:12px; color:var(--muted); margin-top:4px; }
+
+  .controls { display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
+  .btn { border:1px solid var(--border); background:#fff; border-radius:12px; padding:10px 12px; cursor:pointer; font-weight:700; }
+  .btn.primary { background:var(--primary); color:#fff; border-color:transparent; }
+  .btn.danger { color:#ef4444; border-color:#ef4444; background:#fff; }
+
+  /* Preview (invitation) */
+  .preview { background:#f9fafb; border:1px solid var(--border); border-radius:16px; overflow:hidden; }
+  .inv-hero { position:relative; min-height:220px; display:flex; align-items:center; justify-content:center; text-align:center; background:#111; color:#fff; }
+  .inv-hero img.bg { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; opacity:.6; }
+  .logo-wrap { position:absolute; top:14px; left:0; right:0; display:flex; justify-content:center; }
+  .logo-wrap img { height:44px; width:auto; object-fit:contain; filter: drop-shadow(0 2px 8px rgba(0,0,0,.3)); }
+  .hero-text { position:relative; padding:40px 12px 14px; }
+  .brand { display:block; font-size:14px; opacity:.9; margin-bottom:6px; }
+  .edu-name { font-size:22px; font-weight:800; letter-spacing:-.3px; }
+  .content { padding:16px; display:flex; flex-direction:column; gap:12px; }
+  .card { background:#fff; border:1px solid var(--border); border-radius:16px; padding:14px; }
+  .card h4 { margin:0 0 10px; font-size:16px; }
+  .badge { display:inline-block; background:var(--accent); color:var(--primary); padding:4px 10px; border-radius:999px; font-size:12px; font-weight:700; margin-bottom:8px; }
+
+  .schedule-table { width:100%; border-collapse:collapse; }
+  .schedule-table th, .schedule-table td { border:1px solid var(--border); padding:8px; font-size:14px; }
+  .schedule-table th { background:#f3f4f6; }
+
+  .yt-list { display:flex; flex-direction:column; gap:10px; }
+  .yt-item { display:flex; gap:10px; align-items:center; }
+  .yt-item img { width:120px; height:68px; object-fit:cover; border-radius:12px; border:1px solid var(--border); }
+  .yt-item a { font-weight:700; color:var(--primary); text-decoration:none; }
+
+  .small-note { font-size:12px; color:var(--muted); margin-top:8px; }
+  .hr { height:1px; background:var(--border); margin:10px 0; }
+</style>
+</head>
+<body data-theme="blue">
+  <div class="appbar">
+    <h1>교육 안내 페이지 생성기</h1>
+    <div class="theme-picker" role="group" aria-label="테마 선택">
+      <button data-theme="yellow">Yellow</button>
+      <button data-theme="green">Green</button>
+      <button data-theme="blue" class="active">Blue</button>
+      <button data-theme="orange">Orange</button>
+    </div>
+  </div>
+
+  <div class="layout">
+    <!-- LEFT: Editor -->
+    <div class="panel left">
+      <!-- Branding & top -->
+      <div class="section">
+        <h3>브랜딩 & 상단</h3>
+        <div class="row">
+          <label>브랜드명</label>
+          <input id="brandName" type="text" placeholder="예) 현대인재개발원">
+        </div>
+        <div class="row">
+          <label>로고 업로드</label>
+          <input id="logoFile" type="file" accept="image/*">
+        </div>
+        <div class="row">
+          <label>대표(공유) 이미지</label>
+          <input id="shareFile" type="file" accept="image/*">
+        </div>
+        <div class="row">
+          <label>og:image URL(선택)</label>
+          <input id="ogUrl" type="url" placeholder="카카오톡 썸네일로 쓸 외부 이미지 URL (권장)">
+        </div>
+        <div class="row">
+          <label>교육명 표시</label>
+          <input id="showEduName" type="checkbox" checked>
+        </div>
+        <div class="row">
+          <label>교육명</label>
+          <input id="eduName" type="text" placeholder="예) 2025 학교상담 리더 양성 연수 1기">
+        </div>
+        <div class="help">* og:image는 data URL보다 외부 URL을 권장합니다(카카오톡 등 일부 플랫폼 호환성).</div>
+      </div>
+
+      <!-- Sections toggles -->
+      <div class="section">
+        <h3>섹션 on/off</h3>
+        <div class="row"><label>배경 이미지</label><input id="s1_on" type="checkbox" checked></div>
+        <div class="row"><label>교육 개요</label><input id="s2_on" type="checkbox" checked></div>
+        <div class="row"><label>셔틀탑승 안내</label><input id="s3_on" type="checkbox" checked></div>
+        <div class="row"><label>교육 일정표</label><input id="s4_on" type="checkbox" checked></div>
+        <div class="row"><label>기타 안내사항</label><input id="s5_on" type="checkbox" checked></div>
+        <div class="row"><label>사전교육(YouTube)</label><input id="s6_on" type="checkbox" checked></div>
+      </div>
+
+      <!-- Section contents -->
+      <div class="section">
+        <h3>배경 이미지</h3>
+        <div class="row">
+          <label>이미지 업로드</label>
+          <input id="bgFile" type="file" accept="image/*">
+        </div>
+      </div>
+
+      <div class="section">
+        <h3>교육 개요</h3>
+        <div class="row"><label>제목</label><input id="s2_title" type="text" value="교육 개요"></div>
+        <div class="row"><label>본문</label><textarea id="s2_body" rows="4" placeholder="예) 교육 목적, 대상, 기간 등 간략 안내"></textarea></div>
+      </div>
+
+      <div class="section">
+        <h3>셔틀탑승 안내</h3>
+        <div class="row"><label>제목</label><input id="s3_title" type="text" value="셔틀 탑승 안내"></div>
+        <div class="row"><label>본문</label><textarea id="s3_body" rows="4" placeholder="예) 용산역 1번 출구, 09:00 출발 / 담당자 연락처 등"></textarea></div>
+      </div>
+
+      <div class="section">
+        <h3>교육 일정표</h3>
+        <div class="row"><label>제목</label><input id="s4_title" type="text" value="교육 일정표"></div>
+        <div class="row"><label>표 편집</label>
+          <div style="flex:1">
+            <table id="tbl" class="schedule-table">
+              <thead>
+                <tr>
+                  <th style="width:120px">시간</th>
+                  <th>세션명</th>
+                  <th style="width:120px">담당자</th>
+                  <th style="width:120px">장소</th>
+                  <th style="width:60px">삭제</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+            <div class="controls">
+              <button class="btn" id="addRow">행 추가</button>
+              <button class="btn" id="clearRows">표 비우기</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <h3>기타 안내사항</h3>
+        <div class="row"><label>제목</label><input id="s5_title" type="text" value="기타 안내사항"></div>
+        <div class="row"><label>본문</label><textarea id="s5_body" rows="4" placeholder="예) 복장, 준비물, 주차, 흡연구역 등"></textarea></div>
+      </div>
+
+      <div class="section">
+        <h3>사전교육 바로가기 (YouTube 리스트형)</h3>
+        <div class="row"><label>제목</label><input id="s6_title" type="text" value="사전교육 바로가기"></div>
+        <div class="row"><label>YouTube 링크 #1</label><input id="yt1" type="url" placeholder="https://www.youtube.com/watch?v=..."></div>
+        <div class="row"><label>YouTube 링크 #2</label><input id="yt2" type="url" placeholder="https://youtu.be/..."></div>
+        <div class="help">* 썸네일은 자동으로 생성됩니다.</div>
+      </div>
+
+      <div class="controls">
+        <button class="btn" id="saveBtn">저장</button>
+        <button class="btn" id="loadBtn">불러오기</button>
+        <button class="btn danger" id="resetBtn">초기화</button>
+        <button class="btn primary" id="exportBtn">HTML로 내보내기</button>
+      </div>
+      <div class="small-note">로컬 저장소(LocalStorage)에 저장됩니다. 브라우저/기기별로 데이터가 분리됩니다.</div>
+    </div>
+
+    <!-- RIGHT: Preview -->
+    <div class="panel right preview">
+      <div class="inv-hero">
+        <img id="pv_bg" class="bg" alt="배경 이미지" src="">
+        <div class="logo-wrap"><img id="pv_logo" alt="로고" src="" style="display:none"></div>
+        <div class="hero-text">
+          <span id="pv_brand" class="brand"></span>
+          <strong id="pv_edu" class="edu-name" style="display:none"></strong>
+        </div>
+      </div>
+      <div class="content" id="pv_content">
+        <!-- Sections will render here -->
+      </div>
+    </div>
+  </div>
+
+<script>
+const $ = sel => document.querySelector(sel);
+const $$ = sel => Array.from(document.querySelectorAll(sel));
+const STORAGE_KEY = "edu_invitation_gen_v1";
+
+const state = {
+  theme: "blue",
+  brandName: "",
+  showEduName: true,
+  eduName: "",
+  logoData: "",       // data URL
+  bgData: "",         // data URL
+  shareData: "",      // data URL
+  ogUrl: "",
+  sections: {
+    s1_on: true,  // 배경
+    s2_on: true,  // 개요
+    s3_on: true,  // 셔틀
+    s4_on: true,  // 일정표
+    s5_on: true,  // 기타
+    s6_on: true   // 유튜브
+  },
+  s2_title: "교육 개요",
+  s2_body: "",
+  s3_title: "셔틀 탑승 안내",
+  s3_body: "",
+  s4_title: "교육 일정표",
+  table: [], // {time, name, owner, place}
+  s5_title: "기타 안내사항",
+  s5_body: "",
+  s6_title: "사전교육 바로가기",
+  yt1: "",
+  yt2: ""
+};
+
+function bindTheme(){
+  $$(".theme-picker button").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      $$(".theme-picker button").forEach(b=>b.classList.remove("active"));
+      btn.classList.add("active");
+      state.theme = btn.dataset.theme;
+      document.body.setAttribute("data-theme", state.theme);
+      render();
+    });
+  });
+}
+
+function fileToDataURL(file){
+  return new Promise(res=>{
+    if(!file){ res(""); return; }
+    const fr = new FileReader();
+    fr.onload = e => res(e.target.result);
+    fr.readAsDataURL(file);
+  });
+}
+
+function initTable(){
+  const tbody = $("#tbl tbody");
+  tbody.innerHTML = "";
+  if(state.table.length===0){
+    addRow("10:00","입소 및 등록","운영팀","대강의장");
+    addRow("10:30","오리엔테이션","운영팀","대강의장");
+  }else{
+    state.table.forEach(r=> addRow(r.time, r.name, r.owner, r.place));
+  }
+}
+
+function addRow(time="", name="", owner="", place=""){
+  const tbody = $("#tbl tbody");
+  const tr = document.createElement("tr");
+  tr.innerHTML = `
+    <td><input type="text" value="${time}" style="width:100%"></td>
+    <td><input type="text" value="${name}" style="width:100%"></td>
+    <td><input type="text" value="${owner}" style="width:100%"></td>
+    <td><input type="text" value="${place}" style="width:100%"></td>
+    <td style="text-align:center"><button class="btn" data-del>삭제</button></td>
+  `;
+  tbody.appendChild(tr);
+  tr.querySelector('[data-del]').addEventListener('click', ()=>{
+    tr.remove(); captureTable();
+    render();
+  });
+  // input change capture
+  tr.querySelectorAll('input').forEach(inp=>{
+    inp.addEventListener('input', ()=>{ captureTable(); render(); });
+  });
+  captureTable();
+}
+
+function captureTable(){
+  const rows = Array.from($("#tbl tbody").querySelectorAll("tr"));
+  state.table = rows.map(tr=>{
+    const tds = tr.querySelectorAll("td");
+    return {
+      time: tds[0].querySelector("input").value,
+      name: tds[1].querySelector("input").value,
+      owner:tds[2].querySelector("input").value,
+      place:tds[3].querySelector("input").value
+    };
+  });
+}
+
+function parseYtId(url){
+  if(!url) return "";
+  try{
+    const u = new URL(url);
+    if(u.hostname.includes("youtu.be")) return u.pathname.replace("/","");
+    if(u.searchParams.get("v")) return u.searchParams.get("v");
+    if(u.pathname.includes("/shorts/")) return u.pathname.split("/shorts/")[1].split(/[?&]/)[0];
+  }catch(e){}
+  return "";
+}
+
+function render(){
+  // Top hero
+  $("#pv_brand").textContent = state.brandName || "";
+  $("#pv_edu").textContent = state.eduName || "";
+  $("#pv_edu").style.display = state.showEduName && state.eduName ? "inline" : "none";
+  $("#pv_logo").src = state.logoData || "";
+  $("#pv_logo").style.display = state.logoData ? "block" : "none";
+  $("#pv_bg").src = state.sections.s1_on ? (state.bgData || "") : "";
+
+  // Content sections
+  const wrap = $("#pv_content");
+  wrap.innerHTML = "";
+  // 개요
+  if(state.sections.s2_on && (state.s2_title || state.s2_body)){
+    wrap.appendChild(card(state.s2_title, paragraphs(state.s2_body)));
+  }
+  // 셔틀
+  if(state.sections.s3_on && (state.s3_title || state.s3_body)){
+    wrap.appendChild(card(state.s3_title, paragraphs(state.s3_body)));
+  }
+  // 일정표
+  if(state.sections.s4_on && (state.s4_title || state.table.length)){
+    const c = card(state.s4_title, "");
+    const table = document.createElement("table");
+    table.className = "schedule-table";
+    table.innerHTML = `<thead><tr><th>시간</th><th>세션명</th><th>담당자</th><th>장소</th></tr></thead>`;
+    const tb = document.createElement("tbody");
+    state.table.forEach(r=>{
+      const tr = document.createElement("tr");
+      tr.innerHTML = `<td>${escapeHtml(r.time)}</td><td>${escapeHtml(r.name)}</td><td>${escapeHtml(r.owner)}</td><td>${escapeHtml(r.place)}</td>`;
+      tb.appendChild(tr);
+    });
+    table.appendChild(tb);
+    c.appendChild(table);
+    wrap.appendChild(c);
+  }
+  // 기타
+  if(state.sections.s5_on && (state.s5_title || state.s5_body)){
+    wrap.appendChild(card(state.s5_title, paragraphs(state.s5_body)));
+  }
+  // 유튜브
+  if(state.sections.s6_on && (state.s6_title || state.yt1 || state.yt2)){
+    const c = card(state.s6_title, "");
+    const list = document.createElement("div"); list.className="yt-list";
+    [state.yt1, state.yt2].forEach(link=>{
+      const id = parseYtId(link);
+      if(!id) return;
+      const item = document.createElement("div"); item.className="yt-item";
+      const img = document.createElement("img"); img.src = `https://img.youtube.com/vi/${id}/hqdefault.jpg`; img.alt="YouTube 썸네일";
+      const a = document.createElement("a"); a.href = link; a.target="_blank"; a.rel="noopener"; a.textContent = "영상 보기";
+      item.appendChild(img); item.appendChild(a);
+      list.appendChild(item);
+    });
+    c.appendChild(list);
+    c.appendChild(el(`<div class="small-note">* 썸네일은 YouTube에서 제공됩니다.</div>`));
+    wrap.appendChild(c);
+  }
+}
+
+function escapeHtml(s){ return (s||"").replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+function paragraphs(txt){
+  const lines = (txt||"").split(/\n/).map(l=>escapeHtml(l));
+  return el(`<div>${lines.map(l=> l ? `<p>${l}</p>` : "<p>&nbsp;</p>").join("")}</div>`);
+}
+function card(title, inner){
+  const box = document.createElement("div"); box.className="card";
+  if(title){ box.appendChild(el(`<span class="badge">${escapeHtml(title)}</span>`)); }
+  if(typeof inner === "string"){ box.insertAdjacentHTML("beforeend", inner); }
+  else if(inner) { box.appendChild(inner); }
+  return box;
+}
+function el(html){ const d = document.createElement("div"); d.innerHTML = html.trim(); return d.firstElementChild; }
+
+// Inputs sync
+function bindInputs(){
+  $("#brandName").addEventListener("input", e=>{ state.brandName = e.target.value; render(); });
+  $("#logoFile").addEventListener("change", async e=>{ state.logoData = await fileToDataURL(e.target.files[0]); render(); });
+  $("#shareFile").addEventListener("change", async e=>{ state.shareData = await fileToDataURL(e.target.files[0]); });
+  $("#ogUrl").addEventListener("input", e=>{ state.ogUrl = e.target.value; });
+  $("#showEduName").addEventListener("change", e=>{ state.showEduName = e.target.checked; render(); });
+  $("#eduName").addEventListener("input", e=>{ state.eduName = e.target.value; render(); });
+
+  $("#s1_on").addEventListener("change", e=>{ state.sections.s1_on = e.target.checked; render(); });
+  $("#bgFile").addEventListener("change", async e=>{ state.bgData = await fileToDataURL(e.target.files[0]); render(); });
+
+  $("#s2_on").addEventListener("change", e=>{ state.sections.s2_on = e.target.checked; render(); });
+  $("#s2_title").addEventListener("input", e=>{ state.s2_title = e.target.value; render(); });
+  $("#s2_body").addEventListener("input", e=>{ state.s2_body = e.target.value; render(); });
+
+  $("#s3_on").addEventListener("change", e=>{ state.sections.s3_on = e.target.checked; render(); });
+  $("#s3_title").addEventListener("input", e=>{ state.s3_title = e.target.value; render(); });
+  $("#s3_body").addEventListener("input", e=>{ state.s3_body = e.target.value; render(); });
+
+  $("#s4_on").addEventListener("change", e=>{ state.sections.s4_on = e.target.checked; render(); });
+  $("#s4_title").addEventListener("input", e=>{ state.s4_title = e.target.value; render(); });
+  $("#addRow").addEventListener("click", ()=>{ addRow("","","",""); render(); });
+  $("#clearRows").addEventListener("click", ()=>{ $("#tbl tbody").innerHTML=""; captureTable(); render(); });
+
+  $("#s5_on").addEventListener("change", e=>{ state.sections.s5_on = e.target.checked; render(); });
+  $("#s5_title").addEventListener("input", e=>{ state.s5_title = e.target.value; render(); });
+  $("#s5_body").addEventListener("input", e=>{ state.s5_body = e.target.value; render(); });
+
+  $("#s6_on").addEventListener("change", e=>{ state.sections.s6_on = e.target.checked; render(); });
+  $("#s6_title").addEventListener("input", e=>{ state.s6_title = e.target.value; render(); });
+  $("#yt1").addEventListener("input", e=>{ state.yt1 = e.target.value; render(); });
+  $("#yt2").addEventListener("input", e=>{ state.yt2 = e.target.value; render(); });
+}
+
+function save(){
+  captureTable();
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  alert("저장되었습니다.");
+}
+function load(){
+  try{
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+    if(saved && Object.keys(saved).length){
+      Object.assign(state, saved);
+      // reflect to inputs
+      $("#brandName").value = state.brandName || "";
+      $("#showEduName").checked = !!state.showEduName;
+      $("#eduName").value = state.eduName || "";
+      $("#ogUrl").value = state.ogUrl || "";
+      document.body.setAttribute("data-theme", state.theme || "blue");
+      $$(".theme-picker button").forEach(b=> b.classList.toggle("active", b.dataset.theme===state.theme));
+
+      $("#s1_on").checked = !!state.sections.s1_on;
+      $("#s2_on").checked = !!state.sections.s2_on;
+      $("#s3_on").checked = !!state.sections.s3_on;
+      $("#s4_on").checked = !!state.sections.s4_on;
+      $("#s5_on").checked = !!state.sections.s5_on;
+      $("#s6_on").checked = !!state.sections.s6_on;
+
+      $("#s2_title").value = state.s2_title || "";
+      $("#s2_body").value = state.s2_body || "";
+      $("#s3_title").value = state.s3_title || "";
+      $("#s3_body").value = state.s3_body || "";
+      $("#s4_title").value = state.s4_title || "";
+      $("#s5_title").value = state.s5_title || "";
+      $("#s5_body").value = state.s5_body || "";
+      $("#s6_title").value = state.s6_title || "";
+      $("#yt1").value = state.yt1 || "";
+      $("#yt2").value = state.yt2 || "";
+
+      $("#pv_logo").src = state.logoData || "";
+      $("#pv_logo").style.display = state.logoData ? "block" : "none";
+      $("#pv_bg").src = state.bgData || "";
+    }
+  }catch(e){ console.warn(e); }
+  initTable();
+  render();
+}
+function resetAll(){
+  if(!confirm("모든 내용을 초기화하시겠습니까?")) return;
+  localStorage.removeItem(STORAGE_KEY);
+  location.reload();
+}
+
+function exportHtml(){
+  captureTable(); // ensure table sync
+  const theme = state.theme || "blue";
+  const ogTitle = (state.eduName || state.brandName || "교육 안내");
+  const ogDesc = (state.s2_body || "교육 안내 페이지");
+  const ogImage = state.ogUrl || state.shareData || "";
+  const now = new Date();
+  const ymd = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+
+  const html = `<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>${escapeHtml(ogTitle)}</title>
+<meta property="og:type" content="website">
+<meta property="og:title" content="${escapeHtml(ogTitle)}">
+<meta property="og:description" content="${escapeHtml(ogDesc).slice(0,140)}">
+${ogImage ? `<meta property="og:image" content="${ogImage}">` : ""}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+<style>
+  :root { --bg:#f7f7fb; --card:#ffffff; --text:#1f2937; --muted:#6b7280; --border:#e5e7eb; --primary:#2563EB; --accent:rgba(37,99,235,.10); }
+  [data-theme="yellow"] { --primary:#FFD43B; --accent: rgba(255,212,59,.15); }
+  [data-theme="green"] { --primary:#10B981; --accent: rgba(16,185,129,.12); }
+  [data-theme="blue"]  { --primary:#2563EB; --accent: rgba(37,99,235,.10); }
+  [data-theme="orange"]{ --primary:#F97316; --accent: rgba(249,115,22,.12); }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:Pretendard,system-ui,-apple-system,"Apple SD Gothic Neo","Noto Sans KR",Arial,sans-serif;}
+  .container{max-width:860px;margin:0 auto;padding:0 0 24px;}
+  .inv-hero{position:relative;min-height:240px;display:flex;align-items:center;justify-content:center;text-align:center;background:#0b0c10;color:#fff;}
+  .inv-hero img.bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.6;}
+  .logo-wrap{position:absolute;top:14px;left:0;right:0;display:flex;justify-content:center;}
+  .logo-wrap img{height:48px;object-fit:contain;filter:drop-shadow(0 2px 8px rgba(0,0,0,.35));}
+  .hero-text{position:relative;padding:48px 12px 16px;}
+  .brand{display:block;font-size:14px;opacity:.92;margin-bottom:6px;}
+  .edu-name{font-size:24px;font-weight:800;letter-spacing:-.3px;}
+  .content{padding:16px;display:flex;flex-direction:column;gap:14px;}
+  .card{background:#fff;border:1px solid var(--border);border-radius:16px;padding:16px;}
+  .card h4{margin:0 0 10px;font-size:16px;}
+  .badge{display:inline-block;background:var(--accent);color:var(--primary);padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;margin-bottom:8px;}
+  .schedule-table{width:100%;border-collapse:collapse;}
+  .schedule-table th,.schedule-table td{border:1px solid var(--border);padding:8px;font-size:14px;}
+  .schedule-table th{background:#f3f4f6;}
+  .yt-list{display:flex;flex-direction:column;gap:10px;}
+  .yt-item{display:flex;gap:10px;align-items:center;}
+  .yt-item img{width:120px;height:68px;object-fit:cover;border-radius:12px;border:1px solid var(--border);}
+  .yt-item a{font-weight:700;color:var(--primary);text-decoration:none;}
+  .small-note{font-size:12px;color:var(--muted);margin-top:8px;}
+  footer{padding:20px 16px;text-align:center;color:#9ca3af;font-size:12px;}
+</style>
+</head>
+<body data-theme="${theme}">
+  <div class="container">
+    <div class="inv-hero">
+      ${state.sections.s1_on && state.bgData ? `<img class="bg" src="${state.bgData}" alt="">` : ""}
+      <div class="logo-wrap">
+        ${state.logoData ? `<img src="${state.logoData}" alt="로고">` : ""}
+      </div>
+      <div class="hero-text">
+        ${state.brandName ? `<span class="brand">${escapeHtml(state.brandName)}</span>` : ""}
+        ${state.showEduName && state.eduName ? `<strong class="edu-name">${escapeHtml(state.eduName)}</strong>` : ""}
+      </div>
+    </div>
+    <div class="content">
+      ${state.sections.s2_on && (state.s2_title || state.s2_body) ? `
+      <div class="card">
+        <span class="badge">${escapeHtml(state.s2_title||"")}</span>
+        ${toParagraphs(state.s2_body)}
+      </div>`:""}
+
+      ${state.sections.s3_on && (state.s3_title || state.s3_body) ? `
+      <div class="card">
+        <span class="badge">${escapeHtml(state.s3_title||"")}</span>
+        ${toParagraphs(state.s3_body)}
+      </div>`:""}
+
+      ${state.sections.s4_on && (state.s4_title || state.table.length) ? `
+      <div class="card">
+        <span class="badge">${escapeHtml(state.s4_title||"")}</span>
+        <table class="schedule-table">
+          <thead><tr><th>시간</th><th>세션명</th><th>담당자</th><th>장소</th></tr></thead>
+          <tbody>
+            ${state.table.map(r=>`<tr><td>${escapeHtml(r.time||"")}</td><td>${escapeHtml(r.name||"")}</td><td>${escapeHtml(r.owner||"")}</td><td>${escapeHtml(r.place||"")}</td></tr>`).join("")}
+          </tbody>
+        </table>
+      </div>`:""}
+
+      ${state.sections.s5_on && (state.s5_title || state.s5_body) ? `
+      <div class="card">
+        <span class="badge">${escapeHtml(state.s5_title||"")}</span>
+        ${toParagraphs(state.s5_body)}
+      </div>`:""}
+
+      ${state.sections.s6_on && (state.s6_title || state.yt1 || state.yt2) ? `
+      <div class="card">
+        <span class="badge">${escapeHtml(state.s6_title||"")}</span>
+        <div class="yt-list">
+          ${[state.yt1, state.yt2].map(link => {
+            const id = (${parseYtId.toString()})(link);
+            if(!id) return "";
+            const thumb = 'https://img.youtube.com/vi/' + id + '/hqdefault.jpg';
+            const safe = (s)=> (s||"").replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+            return `<div class="yt-item"><img src="${thumb}" alt=""><a href="${safe(link)}" target="_blank" rel="noopener">영상 보기</a></div>`;
+          }).join("")}
+        </div>
+        <div class="small-note">* 썸네일은 YouTube에서 제공됩니다.</div>
+      </div>`:""}
+    </div>
+    <footer>Generated on ${ymd}</footer>
+  </div>
+<script>
+// helper duplicated in exported page
+${parseYtId.toString()}
+function toParagraphs(txt){
+  const esc = s => (s||"").replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  return (txt||"").split(/\\n/).map(l => '<p>'+ (l?esc(l):'&nbsp;') +'</p>').join('');
+}
+</script>
+</body>
+</html>`;
+
+  const blob = new Blob([html], {type:"text/html;charset=utf-8"});
+  const a = document.createElement("a");
+  const fname = `edu-${ymd}.html`;
+  a.href = URL.createObjectURL(blob);
+  a.download = fname;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+document.getElementById("saveBtn").addEventListener("click", save);
+document.getElementById("loadBtn").addEventListener("click", load);
+document.getElementById("resetBtn").addEventListener("click", resetAll);
+document.getElementById("exportBtn").addEventListener("click", exportHtml);
+
+bindTheme();
+bindInputs();
+initTable();
+load();
+</script>
+</body>
+</html>
